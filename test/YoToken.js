@@ -76,4 +76,43 @@ contract('YoToken', (accounts) => {
         });
     });
 
+    it('handles the delegated transfers', () => {
+        YoToken.deployed().then((instance) => {
+            tokenInstance = instance;
+            fromAccount = accounts[3];
+            toAccount = accounts[4];
+            spendingAccount = accounts[5];
+
+            return tokenInstance.transfer(fromAccount, 1000, { from : accounts[0] });
+        }).then((receipt) => {
+            return tokenInstance.approve(spendingAccount, 100, { from: fromAccount });
+        }).then((receipt) => {
+            return tokenInstance.transferFrom(fromAccount, toAccount, 10000, { from: spendingAccount });
+        }).then(assert.fail).catch((error) => {
+            assert(error.message.indexOf('revert') >= 0, 'can not transfer value larger than balance');
+            return tokenInstance.transferFrom(fromAccount, toAccount, 500, { from: spendingAccount });
+        }).then(assert.fail).catch((error) => {
+            assert(error.message.indexOf('revert') >= 0, 'can not transfer value larger than allowance');
+            return tokenInstance.transferFrom.call(fromAccount, toAccount, 50, { from: spendingAccount });
+        }).then((success) => {
+            assert.equal(success, true, 'it returns true');
+            return tokenInstance.transferFrom(fromAccount, toAccount, 50, { from: spendingAccount });
+        }).then((receipt) => {
+            assert.equal(receipt.logs.length, 1, 'triggers one event');
+            assert.equal(receipt.logs[0].event, 'Transfer', 'should be "Transfer" event');
+            assert.equal(receipt.logs[0].args._from, fromAccount, 'logs the account the tokens are authorized by');
+            assert.equal(receipt.logs[0].args._to, toAccount, 'logs the account the tokens are authorized to');
+            assert.equal(receipt.logs[0].args._value, 50, 'logs the amount transfered');
+            
+            return tokenInstance.balanceOf(fromAccount);
+        }).then((balance) => {
+            assert.equal(balance.toNumber(), 950, 'deducts amount from the sending amount');
+            return tokenInstance.balanceOf(toAccount);
+        }).then((balance) => {
+            assert.equal(balance.toNumber(), 50, 'adds amount to the recevinging amount');
+            return tokenInstance.allowance(fromAccount, spendingAccount);
+        }).then((allowance) => {
+            assert.equal(allowance.toNumber(), 50, 'deducts the amount from the allowance');
+        }); 
+    });
 });
