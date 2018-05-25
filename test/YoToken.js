@@ -29,4 +29,31 @@ contract('YoToken', (accounts) => {
             assert.equal(adminBalance.toNumber(), 123456789, 'it allocates the initial supply in the admin account');
         });
     });
+
+    it('transfers token ownership', () => {
+        return YoToken.deployed().then((instance) => {
+            tokenInstance = instance;
+            return tokenInstance.transfer.call(accounts[1], 987654321);
+        }).then(assert.fail).catch((error) => {
+            assert(error.message.indexOf('revert') >= 0, 'error message must contain revert');
+            return tokenInstance.transfer.call(accounts[1], 1000, { from: accounts[0] });
+        }).then((success) => {
+            assert.equal(success, true, 'outputs true on success')
+            return tokenInstance.transfer(accounts[1], 1000, { from: accounts[0] });
+        }).then((receipt) => {
+            assert.equal(receipt.logs.length, 1, 'triggers one event');
+            assert.equal(receipt.logs[0].event, 'Transfer', 'should be "Transfer" event');
+            assert.equal(receipt.logs[0].args._from, accounts[0], 'logs the account of sender');
+            assert.equal(receipt.logs[0].args._to, accounts[1], 'logs the account of receiver');
+            assert.equal(receipt.logs[0].args._value, 1000, 'logs the amount transfered');
+            
+            return tokenInstance.balanceOf(accounts[1]);
+        }).then((balance) => {
+            assert.equal(balance.toNumber(), 1000, 'adds the amount to the receving account');
+            return tokenInstance.balanceOf(accounts[0]);
+        }).then((balance) => {
+            assert.equal(balance.toNumber(), 123455789, 'deducts the amount from the sender account');
+        });
+    });
+
 });
