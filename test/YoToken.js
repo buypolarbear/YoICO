@@ -23,10 +23,10 @@ contract('YoToken', (accounts) => {
             tokenInstance = instance;
             return tokenInstance.totalSupply();
         }).then((totalSupply) => {
-            assert.equal(totalSupply.toNumber(), 123456789, 'sets the total supply to 123,456,789');
+            assert.equal(totalSupply.toNumber(), 1000000, 'sets the total supply to 123,456,789');
             return tokenInstance.balanceOf(accounts[0]);
         }).then((adminBalance) => {
-            assert.equal(adminBalance.toNumber(), 123456789, 'it allocates the initial supply in the admin account');
+            assert.equal(adminBalance.toNumber(), 1000000, 'it allocates the initial supply in the admin account');
         });
     });
 
@@ -52,7 +52,7 @@ contract('YoToken', (accounts) => {
             assert.equal(balance.toNumber(), 1000, 'adds the amount to the receving account');
             return tokenInstance.balanceOf(accounts[0]);
         }).then((balance) => {
-            assert.equal(balance.toNumber(), 123455789, 'deducts the amount from the sender account');
+            assert.equal(balance.toNumber(), 999000, 'deducts the amount from the sender account');
         });
     });
 
