@@ -58,4 +58,24 @@ contract('YoTokenSale', (accounts) => {
             assert(error.message.indexOf('revert') >= 0, 'can not buy tokens more than the available ones');
         });
     });
+
+    it('ends token sale', () => {
+        return YoToken.deployed().then((instance) => {
+            tokenInstance = instance;
+            return YoTokenSale.deployed();
+        }).then((instance) => {
+            tokenSaleInstance = instance;
+            return tokenSaleInstance.endSale({from: buyer});
+        }).then(assert.fail).catch((error) => {
+            assert(error.message.indexOf('revert') >= 0, 'error must contain revert');
+            return tokenSaleInstance.endSale({from: admin});
+        }).then((receipt) => {
+            return tokenInstance.balanceOf(admin);
+        }).then((balance) => {
+            assert.equal(balance.toNumber(), 999990, 'returns unsold token to admin');
+            return web3.eth.getBalance(tokenSaleInstance.address);
+        }).then((balance) => {
+            assert.equal(balance.toNumber(), 0, 'resets all the variable');
+        });
+    });
 });

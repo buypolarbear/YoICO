@@ -34,4 +34,11 @@ contract YoTokenSale {
 
         emit Sell(msg.sender, _numberOfTokens);
     }
+
+    function endSale() public {
+        require(msg.sender == admin);
+        require(tokenContract.transfer(admin, tokenContract.balanceOf(this)));
+
+        admin.transfer(address(this).balance);
+    }
 }
