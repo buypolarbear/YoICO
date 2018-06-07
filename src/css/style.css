@@ -5,3 +5,7 @@
 h1 {
     padding: 20px;
 }
+
+#content {
+    display: none;
+}
